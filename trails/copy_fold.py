@@ -15,12 +15,12 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import text
 from sqlalchemy import create_engine
+
+
 engine = create_engine("sqlite+pysqlite:///cte2.sqlite")
 from sqlalchemy import Table, Column, Integer, String
 session=Session(engine)
-class Base(DeclarativeBase):
-    pass
-
+Base = declarative_base()
 
 
 # i am going to use sqlalchemy 2.0 syntax for this file
@@ -45,16 +45,6 @@ from typing import List
 Base.metadata.create_all(engine)
 
 
-    
-# this will create an error because of the recursive relationship between manager and employees 
-
-# Base.metadata.create_all(engine)
-
-# another simple table for employee 
-
-# lets start inserting some data into the employee table
-
-# this query will remove all previous data from the employee table
 session.execute(text("delete from folder"))
 session.commit()
 

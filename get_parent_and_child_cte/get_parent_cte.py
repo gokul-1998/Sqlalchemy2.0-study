@@ -79,59 +79,30 @@ query = select(with_recursive_cte)
 result = session.execute(query)
 folders = result.fetchall()  # Fetch all rows as tuples
 
-for folder in folders:
-    print(folder)
-
-# say that i want to copy the folder with id 2 to a new folder with id 8 recursively 
-# i can do that by using the recursive CTE above and inserting the result into the folder table
-
-copy_folder = select(Folder).where(Folder.id == 2).cte(recursive=True)
-copy_folder = copy_folder.union_all(select(Folder).join(copy_folder, Folder.parent_id == copy_folder.c.id))
-
-query = select(copy_folder)
-result = session.execute(query)
-folders = result.fetchall()  # Fetch all rows as tuples
-print("Sadsa")
-print(folders)
 # for folder in folders:
 #     print(folder)
-#     folder.id = None
-#     folder.parent_id = 8
-#     session.add(folder)
-# session.commit()
 
-# lets check if the folder with id 8 has been copied recursively
+# lets create a recursive CTE to get all the parent folders in the folder table for a given folder id
+#
+with_recursive_cte = select(Folder).where(Folder.id == 7).cte(recursive=True) # this is the anchor member
+with_recursive_cte = with_recursive_cte.union_all(select(Folder).join(with_recursive_cte, Folder.id == with_recursive_cte.c.parent_id)) # this is the recursive member
+# termination_condition = select(Folder).where(Folder.parent_id==Folder.id)  # Assuming parent_id is NULL for the root folder
+# 
+# Create the recursive CTE
+# recursive_cte = select(Folder).where(Folder.id == 7).cte(recursive=True)
+# recursive_cte = recursive_cte.union_all(select(Folder).join(recursive_cte, Folder.id == recursive_cte.c.parent_id))
 
-from sqlalchemy import select
+# Combine the recursive CTE and termination condition
+# subquery = select(recursive_cte).union_all(termination_condition).alias()
 
+# Construct the final query
+# query = select(subquery.c)
 
-def copy_folder_recursively(source_folder, parent_id,flag=False):
-    if flag:
-        new_folder = Folder(name="copy of " +source_folder.name, parent_id=parent_id)
-        session.add(new_folder)
-    else:
-        new_folder = Folder(name=source_folder.name, parent_id=parent_id)
-        session.add(new_folder)
+# query = recursive_cte.union_all(termination_condition)
 
-    # Recursively copy subfolders
-    for subfolder in source_folder.folders:
-        print("inside the loop")
-        copy_folder_recursively(subfolder, new_folder.id)
+query = select(with_recursive_cte)
+result = session.execute(query)
+folders = result.fetchall()  # Fetch all rows as tuples
 
-# Copy folder with ID 1 recursively with par
-source_folder = select(Folder).where(Folder.id == 2)
-source_folder = session.execute(source_folder)
-source_folder = source_folder.scalars().unique().first()
-import copy
-print("gokul gokul")
-print(source_folder)
-print(source_folder.name)
-# source_folder.name="copy of "+source_folder.name
-
-# source_folder=copy.deepcopy(source_folder)
-# source_folder.name="copy of "+source_folder.name
-
-copy_folder_recursively(source_folder, source_folder.parent_id,flag=True)
-
-# Commit the changes
-session.commit()
+for folder in folders:
+    print(folder)
